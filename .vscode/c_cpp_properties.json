@@ -3,7 +3,8 @@
     {
       "name": "ARM_TINY",
       "includePath": [
-        "include"
+        "include",
+        "include/virtio"
       ],
       "defines": [
         "-c99"

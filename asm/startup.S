@@ -2,7 +2,7 @@
 .section .text
 .global _start
 
-.section .text.startup, "x"
+.section .text.boot, "x"
 _start:
     mov x8, #97
     mov x9, #0x09000000 //串口地址，需要变化

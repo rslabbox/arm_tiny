@@ -2,8 +2,8 @@
 #include "tinyio.h"
 
 // External symbols from linker script
-extern uint64_t __virtio_start;
-extern uint64_t __virtio_end;
+extern uint64_t __heap_start;
+extern uint64_t __heap_end;
 
 // Global allocator instance
 static virtio_allocator_t g_allocator;
@@ -19,8 +19,8 @@ int virtio_allocator_init(void)
     }
 
     // Get memory region from linker script
-    uint64_t virtio_start = (uint64_t)&__virtio_start;
-    uint64_t virtio_end = (uint64_t)&__virtio_end;
+    uint64_t virtio_start = (uint64_t)&__heap_start;
+    uint64_t virtio_end = (uint64_t)&__heap_end;
 
     // First 0x500000 (5MB) for device queues
     g_device_allocator.start_addr = virtio_start;
