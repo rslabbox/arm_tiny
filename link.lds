@@ -1,38 +1,63 @@
-/* link.ld */
-ENTRY(_start)
+OUTPUT_ARCH(aarch64)
 
+BASE_ADDRESS = 0x40080000;
+
+ENTRY(_start)
 SECTIONS
 {
-    /* 设置内核加载地址，4K 对齐 */
-    /* . = 0x70200000; */
-    /*. = 0x40200000;*/
-    . = 0x40080000;
+    . = BASE_ADDRESS;
+    skernel = .;
 
-    /* 代码段，4K 对齐 */
-    . = ALIGN(4096);
-    .text : ALIGN(4096) {
-        *(.text.startup)
-        *(.text)
+    .text : {
+        stext = .;
+        *(.text.boot)
+        *(.text .text.*)
+        . = ALIGN(4K);
+        etext = .;
     }
 
-    /* 只读数据段，4K 对齐 */
-    . = ALIGN(4096);
-    .rodata : ALIGN(4096) {
-        *(.rodata)
+    .rodata : {
+        srodata = .;
+        *(.rodata .rodata.*)
+        *(.srodata .srodata.*)
+        . = ALIGN(4K);
+        erodata = .;
     }
 
-    /* 数据段，4K 对齐 */
-    . = ALIGN(4096);
-    .data : ALIGN(4096) {
-        *(.data)
+    .data : {
+        sdata = .;
+        *(.data.boot_page_table)
+        *(.data .data.*)
+        *(.sdata .sdata.*)
+        *(.got .got.*)
+        . = ALIGN(4K);
+        edata = .;
     }
 
-    /* BSS段，4K 对齐 */
-    . = ALIGN(4096);
-    .bss : ALIGN(4096) {
-        *(.bss)
+    .bss : {
+        boot_stack = .;
+        *(.bss.stack)
+        . = ALIGN(4K);
+        boot_stack_top = .;
+
+        sbss = .;
+        *(.bss .bss.*)
+        *(.sbss .sbss.*)
+        . = ALIGN(4K);
+        ebss = .;
     }
+
+    . = ALIGN(64);
+    __heap_start = .;
+    . += 0x1000000; /* 16MB VirtIO */
+    __heap_end = .;
 
     /* 确保整个镜像结束时也是4K对齐 */
     . = ALIGN(4096);
+
+    ekernel = .;
+
+    /DISCARD/ : {
+        *(.eh_frame) *(.eh_frame_hdr)
+    }
 }
