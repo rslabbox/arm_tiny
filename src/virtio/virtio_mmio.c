@@ -66,7 +66,7 @@ void virtio_cache_invalidate_range(uint64_t start, uint32_t size)
 // Helper function to display VirtIO features
 static void virtio_display_features(uint64_t features, const char *prefix)
 {
-    tiny_log(INFO, "[VIRTIO] %s features: 0x%x%08x\n", prefix,
+    tiny_log(TRACE, "[VIRTIO] %s features: 0x%x%08x\n", prefix,
              (uint32_t)(features >> 32), (uint32_t)features);
 
     if (features & (1ULL << VIRTIO_F_VERSION_1))
@@ -118,7 +118,7 @@ void virtio_write32(uint64_t addr, uint32_t value)
 
 bool virtio_probe_device(uint64_t base_addr)
 {
-    tiny_log(INFO, "[VIRTIO] Probing device at address 0x%x\n", (uint32_t)base_addr);
+    tiny_log(TRACE, "[VIRTIO] Probing device at address 0x%x\n", (uint32_t)base_addr);
 
     // Read magic number
     uint32_t magic = virtio_read32(base_addr + VIRTIO_MMIO_MAGIC);
@@ -129,7 +129,7 @@ bool virtio_probe_device(uint64_t base_addr)
         return false;
     }
 
-    tiny_log(INFO, "[VIRTIO] Magic number check PASSED: 0x%x\n", magic);
+    tiny_log(TRACE, "[VIRTIO] Magic number check PASSED: 0x%x\n", magic);
 
     // Read version
     uint32_t version = virtio_read32(base_addr + VIRTIO_MMIO_VERSION);
@@ -139,7 +139,7 @@ bool virtio_probe_device(uint64_t base_addr)
         return false;
     }
 
-    tiny_log(INFO, "[VIRTIO] Version check PASSED: %d\n", version);
+    tiny_log(TRACE, "[VIRTIO] Version check PASSED: %d\n", version);
 
     // Read device ID
     uint32_t device_id = virtio_read32(base_addr + VIRTIO_MMIO_DEVICE_ID);
@@ -149,14 +149,14 @@ bool virtio_probe_device(uint64_t base_addr)
         return false;
     }
 
-    tiny_log(INFO, "[VIRTIO] Device ID: %d\n", device_id);
+    tiny_log(TRACE, "[VIRTIO] Device ID: %d\n", device_id);
 
     return true;
 }
 
 bool virtio_device_init(virtio_device_t *dev, uint64_t base_addr)
 {
-    tiny_log(INFO, "[VIRTIO] Initializing device at 0x%x\n", (uint32_t)base_addr);
+    tiny_log(TRACE, "[VIRTIO] Initializing device at 0x%x\n", (uint32_t)base_addr);
 
     // Probe device first
     if (!virtio_probe_device(base_addr))
@@ -175,17 +175,17 @@ bool virtio_device_init(virtio_device_t *dev, uint64_t base_addr)
 
     dev->version = hw_version;
 
-    tiny_log(INFO, "[VIRTIO] Device info - Magic: 0x%x, Version: %d, Device ID: %d, Vendor ID: 0x%x\n",
+    tiny_log(TRACE, "[VIRTIO] Device info - Magic: 0x%x, Version: %d, Device ID: %d, Vendor ID: 0x%x\n",
              dev->magic, dev->version, dev->device_id, dev->vendor_id);
 
     // VirtIO version support: Both Legacy (v1) and Modern (v2+) modes
     if (dev->version == 1)
     {
-        tiny_log(INFO, "[VIRTIO] Device uses VirtIO 1.0 Legacy mode\n");
+        tiny_log(TRACE, "[VIRTIO] Device uses VirtIO 1.0 Legacy mode\n");
     }
     else if (dev->version >= 2)
     {
-        tiny_log(INFO, "[VIRTIO] Device uses VirtIO 1.1+ Modern mode (version %d)\n", dev->version);
+        tiny_log(TRACE, "[VIRTIO] Device uses VirtIO 1.1+ Modern mode (version %d)\n", dev->version);
     }
     else
     {
@@ -194,15 +194,15 @@ bool virtio_device_init(virtio_device_t *dev, uint64_t base_addr)
 
     // Reset device
     virtio_set_status(dev, 0);
-    tiny_log(INFO, "[VIRTIO] Device reset completed\n");
+    tiny_log(TRACE, "[VIRTIO] Device reset completed\n");
 
     // Acknowledge the device
     virtio_set_status(dev, VIRTIO_STATUS_ACKNOWLEDGE);
-    tiny_log(INFO, "[VIRTIO] Device acknowledged\n");
+    tiny_log(TRACE, "[VIRTIO] Device acknowledged\n");
 
     // Indicate that we know how to drive the device
     virtio_set_status(dev, VIRTIO_STATUS_ACKNOWLEDGE | VIRTIO_STATUS_DRIVER);
-    tiny_log(INFO, "[VIRTIO] Driver status set\n");
+    tiny_log(TRACE, "[VIRTIO] Driver status set\n");
 
     // Read device features - handle both 32-bit and 64-bit feature negotiation
     uint32_t device_features_low, device_features_high = 0;
@@ -247,14 +247,14 @@ bool virtio_device_init(virtio_device_t *dev, uint64_t base_addr)
 
         driver_features |= (device_features_low & device_specific_mask);
 
-        tiny_log(INFO, "[VIRTIO] Modern mode: VERSION_1 feature confirmed, selective negotiation\n");
+        tiny_log(TRACE, "[VIRTIO] Modern mode: VERSION_1 feature confirmed, selective negotiation\n");
         virtio_display_features(driver_features, "Driver");
     }
     else
     {
         // VirtIO 1.0 legacy mode - accept all device features (legacy behavior)
         driver_features = device_features_low;
-        tiny_log(INFO, "[VIRTIO] Legacy mode: using 32-bit features only\n");
+        tiny_log(TRACE, "[VIRTIO] Legacy mode: using 32-bit features only\n");
     }
 
     // Write driver features back
@@ -267,12 +267,12 @@ bool virtio_device_init(virtio_device_t *dev, uint64_t base_addr)
         virtio_write32(dev->base_addr + VIRTIO_MMIO_DRIVER_FEATURES, (uint32_t)(driver_features >> 32));
     }
 
-    tiny_log(INFO, "[VIRTIO] Driver features set to: 0x%x%x\n",
+    tiny_log(TRACE, "[VIRTIO] Driver features set to: 0x%x%x\n",
              (uint32_t)(driver_features >> 32), (uint32_t)driver_features);
 
     // Indicate that feature negotiation is complete
     virtio_set_status(dev, VIRTIO_STATUS_ACKNOWLEDGE | VIRTIO_STATUS_DRIVER | VIRTIO_STATUS_FEATURES_OK);
-    tiny_log(INFO, "[VIRTIO] Features OK status set\n");
+    tiny_log(TRACE, "[VIRTIO] Features OK status set\n");
 
     // Check if device accepted our features
     uint8_t status = virtio_read32(dev->base_addr + VIRTIO_MMIO_STATUS);
@@ -284,7 +284,7 @@ bool virtio_device_init(virtio_device_t *dev, uint64_t base_addr)
 
     dev->ready = false;
 
-    tiny_log(INFO, "[VIRTIO] Device initialization SUCCESSFUL\n");
+    tiny_log(TRACE, "[VIRTIO] Device initialization SUCCESSFUL\n");
     return true;
 }
 
@@ -306,13 +306,13 @@ void virtio_set_status(virtio_device_t *dev, uint8_t status)
 bool virtio_queue_manager_init(void)
 {
     virtio_queue_manager_t *queue_manager = virtio_get_queue_manager();
-    tiny_log(INFO, "[VIRTIO] Initializing queue manager %d\n", queue_manager_initialized);
+    tiny_log(TRACE, "[VIRTIO] Initializing queue manager %d\n", queue_manager_initialized);
     if (queue_manager_initialized)
     {
         tiny_log(DEBUG, "[VIRTIO] Queue manager already initialized\n");
         return true;
     }
-    tiny_log(INFO, "[VIRTIO] Initializing queue manager %d\n", queue_manager_initialized);
+    tiny_log(TRACE, "[VIRTIO] Initializing queue manager %d\n", queue_manager_initialized);
     // Initialize all queues as free
     for (uint32_t i = 0; i < VIRTIO_MAX_TOTAL_QUEUES; i++)
     {
@@ -320,13 +320,13 @@ bool virtio_queue_manager_init(void)
         queue_manager->queues[i].queue_id = 0;
         queue_manager->queues[i].device = NULL;
     }
-    tiny_log(INFO, "[VIRTIO] Initializing queue manager %d\n", queue_manager_initialized);
+    tiny_log(TRACE, "[VIRTIO] Initializing queue manager %d\n", queue_manager_initialized);
 
     queue_manager->next_queue_id = 1; // Start from 1, 0 is invalid
     queue_manager->allocated_count = 0;
     queue_manager_initialized = true;
 
-    tiny_log(INFO, "[VIRTIO] Queue manager initialized (max queues: %d)\n", VIRTIO_MAX_TOTAL_QUEUES);
+    tiny_log(TRACE, "[VIRTIO] Queue manager initialized (max queues: %d)\n", VIRTIO_MAX_TOTAL_QUEUES);
     return true;
 }
 
@@ -388,7 +388,7 @@ void virtio_queue_free(virtqueue_t *queue)
         return;
     }
 
-    tiny_log(INFO, "[VIRTIO] Freeing queue ID %d\n", queue->queue_id);
+    tiny_log(TRACE, "[VIRTIO] Freeing queue ID %d\n", queue->queue_id);
 
     // Clear queue structure
     queue->in_use = false;
@@ -452,7 +452,7 @@ bool virtio_queue_init(virtqueue_t *queue)
     virtio_device_t *dev = queue->device;
     uint32_t queue_idx = queue->device_queue_idx;
 
-    tiny_log(INFO, "[VIRTIO] Initializing queue ID %d (device queue %d)\n", queue->queue_id, queue_idx);
+    tiny_log(TRACE, "[VIRTIO] Initializing queue ID %d (device queue %d)\n", queue->queue_id, queue_idx);
 
     // Select queue
     virtio_write32(dev->base_addr + VIRTIO_MMIO_QUEUE_SEL, queue_idx);
@@ -465,7 +465,7 @@ bool virtio_queue_init(virtqueue_t *queue)
         return false;
     }
 
-    tiny_log(INFO, "[VIRTIO] Queue %d max size: %d\n", queue_idx, queue_num_max);
+    tiny_log(TRACE, "[VIRTIO] Queue %d max size: %d\n", queue_idx, queue_num_max);
     dev->queue_num_max = queue_num_max;
 
     // Set queue size with safety limit - use very small size for testing
@@ -473,10 +473,10 @@ bool virtio_queue_init(virtqueue_t *queue)
     if (queue_size > 16)
     {
         queue_size = 16; // Use very small queue size for debugging
-        tiny_log(INFO, "[VIRTIO] Queue size limited to 16 for debugging\n");
+        tiny_log(TRACE, "[VIRTIO] Queue size limited to 16 for debugging\n");
     }
     virtio_write32(dev->base_addr + VIRTIO_MMIO_QUEUE_NUM, queue_size);
-    tiny_log(INFO, "[VIRTIO] Queue %d size set to: %d\n", queue_idx, queue_size);
+    tiny_log(TRACE, "[VIRTIO] Queue %d size set to: %d\n", queue_idx, queue_size);
 
     // VirtIO 1.0 Legacy mode requires all queue components in a single contiguous memory region
     // starting from PFN-specified page. Modern mode uses separate addresses.
@@ -498,7 +498,7 @@ bool virtio_queue_init(virtqueue_t *queue)
         avail_addr = (base_addr + desc_size + 15) & ~15;  // Available ring (2-byte aligned, but use 16 for safety)
         used_addr = (avail_addr + avail_size + 15) & ~15; // Used ring (4-byte aligned, but use 16 for safety)
 
-        tiny_log(INFO, "[VIRTIO] Modern mode layout - optimized alignment\n");
+        tiny_log(TRACE, "[VIRTIO] Modern mode layout - optimized alignment\n");
     }
     else
     {
@@ -507,17 +507,17 @@ bool virtio_queue_init(virtqueue_t *queue)
         avail_addr = desc_addr + desc_size;                            // Available ring follows descriptors
         used_addr = (avail_addr + used_size + 4096 - 1) & ~(4096 - 1); // Used ring 4KB aligned
 
-        tiny_log(INFO, "[VIRTIO] Legacy mode layout - contiguous memory\n");
+        tiny_log(TRACE, "[VIRTIO] Legacy mode layout - contiguous memory\n");
     }
 
     // Verify total size fits in reasonable bounds (should be < 4KB for small queues)
     uint64_t total_size = used_addr + used_size - base_addr;
 
-    tiny_log(INFO, "[VIRTIO] Legacy layout - Base: 0x%x, Desc: 0x%x, Avail: 0x%x, Used: 0x%x\n",
+    tiny_log(TRACE, "[VIRTIO] Legacy layout - Base: 0x%x, Desc: 0x%x, Avail: 0x%x, Used: 0x%x\n",
              (uint32_t)base_addr, (uint32_t)desc_addr, (uint32_t)avail_addr, (uint32_t)used_addr);
-    tiny_log(INFO, "[VIRTIO] Component sizes - Desc: %d, Avail: %d, Used: %d, Total: %d bytes\n",
+    tiny_log(TRACE, "[VIRTIO] Component sizes - Desc: %d, Avail: %d, Used: %d, Total: %d bytes\n",
              (int)desc_size, (int)avail_size, (int)used_size, (int)total_size);
-    tiny_log(INFO, "[VIRTIO] Address offsets - Avail: +%d, Used: +%d\n",
+    tiny_log(TRACE, "[VIRTIO] Address offsets - Avail: +%d, Used: +%d\n",
              (int)(avail_addr - base_addr), (int)(used_addr - base_addr));
 
     if (total_size > 8192)
@@ -526,7 +526,7 @@ bool virtio_queue_init(virtqueue_t *queue)
     }
     else
     {
-        tiny_log(INFO, "[VIRTIO] Legacy queue layout validation PASSED (total %d bytes)\n", (int)total_size);
+        tiny_log(TRACE, "[VIRTIO] Legacy queue layout validation PASSED (total %d bytes)\n", (int)total_size);
     }
 
     // Clear entire queue memory region safely
@@ -547,7 +547,7 @@ bool virtio_queue_init(virtqueue_t *queue)
     if (dev->version >= 2)
     {
         // VirtIO 1.1+ modern interface
-        tiny_log(INFO, "[VIRTIO] Using VirtIO 1.1+ modern interface (queue_size=%d)\n", queue_size);
+        tiny_log(TRACE, "[VIRTIO] Using VirtIO 1.1+ modern interface (queue_size=%d)\n", queue_size);
 
         // Ensure all memory regions are properly cleaned before configuration
         virtio_cache_clean_range(desc_addr, desc_size);
@@ -601,13 +601,13 @@ bool virtio_queue_init(virtqueue_t *queue)
             return false;
         }
 
-        tiny_log(INFO, "[VIRTIO] Modern mode queue %d successfully activated (ready=%d)\n",
+        tiny_log(TRACE, "[VIRTIO] Modern mode queue %d successfully activated (ready=%d)\n",
                  queue_idx, queue_ready);
     }
     else
     {
         // VirtIO 1.0 legacy interface - all components in contiguous memory
-        tiny_log(INFO, "[VIRTIO] Using VirtIO 1.0 legacy interface (queue_size=%d)\n", queue_size);
+        tiny_log(TRACE, "[VIRTIO] Using VirtIO 1.0 legacy interface (queue_size=%d)\n", queue_size);
 
         // Add memory barrier before setting page size
         __asm__ volatile("dmb sy" ::: "memory");
@@ -617,7 +617,7 @@ bool virtio_queue_init(virtqueue_t *queue)
 
         // CRITICAL: Set queue alignment - this is required in Legacy mode
         virtio_write32(dev->base_addr + VIRTIO_MMIO_QUEUE_ALIGN, 4096);
-        tiny_log(INFO, "[VIRTIO] Queue alignment set to 4096 bytes\n");
+        tiny_log(TRACE, "[VIRTIO] Queue alignment set to 4096 bytes\n");
 
         // Set queue PFN (physical frame number) - device calculates component addresses automatically
         uint32_t queue_pfn = (uint32_t)(base_addr >> 12); // Use base_addr instead of desc_addr
@@ -631,9 +631,9 @@ bool virtio_queue_init(virtqueue_t *queue)
         // Additional cache cleaning to ensure device sees the configuration
         virtio_cache_clean_range(base_addr, total_size);
 
-        tiny_log(INFO, "[VIRTIO] Legacy mode queue PFN set to: 0x%x (base_addr=0x%x)\n",
+        tiny_log(TRACE, "[VIRTIO] Legacy mode queue PFN set to: 0x%x (base_addr=0x%x)\n",
                  queue_pfn, (uint32_t)base_addr);
-        tiny_log(INFO, "[VIRTIO] Device will auto-calculate: Desc=0x%x, Avail=0x%x, Used=0x%x\n",
+        tiny_log(TRACE, "[VIRTIO] Device will auto-calculate: Desc=0x%x, Avail=0x%x, Used=0x%x\n",
                  (uint32_t)desc_addr, (uint32_t)avail_addr, (uint32_t)used_addr);
 
         // Verify PFN calculation is correct
@@ -644,7 +644,7 @@ bool virtio_queue_init(virtqueue_t *queue)
         }
         else
         {
-            tiny_log(INFO, "[VIRTIO] PFN readback verification PASSED: 0x%x\n", pfn_check);
+            tiny_log(TRACE, "[VIRTIO] PFN readback verification PASSED: 0x%x\n", pfn_check);
         }
     }
 
@@ -661,7 +661,7 @@ bool virtio_queue_init(virtqueue_t *queue)
     queue->avail = (virtq_avail_t *)avail_addr;
     queue->used = (virtq_used_t *)used_addr;
 
-    tiny_log(INFO, "[VIRTIO] Device-calculated addresses - Desc: 0x%x, Avail: 0x%x, Used: 0x%x\n",
+    tiny_log(TRACE, "[VIRTIO] Device-calculated addresses - Desc: 0x%x, Avail: 0x%x, Used: 0x%x\n",
              (uint32_t)base_addr, (uint32_t)avail_addr, (uint32_t)used_addr);
 
     // CRITICAL: Ensure all queue memory is properly flushed to main memory
@@ -679,14 +679,14 @@ bool virtio_queue_init(virtqueue_t *queue)
 #else
     queue->avail->flags |= VIRTQ_AVAIL_F_NO_INTERRUPT;
 #endif
-    tiny_log(INFO, "[VIRTIO] Set avail->flags = 0x%x for polling mode\n",
+    tiny_log(TRACE, "[VIRTIO] Set avail->flags = 0x%x for polling mode\n",
              queue->avail->flags);
 
     // Ensure the flag setting is visible to the device
     virtio_cache_clean_range((uint64_t)queue->avail, sizeof(virtq_avail_t));
     __asm__ volatile("dmb sy" ::: "memory");
 
-    tiny_log(INFO, "[VIRTIO] Queue ID %d initialization SUCCESSFUL (polling mode enabled)\n", queue->queue_id);
+    tiny_log(TRACE, "[VIRTIO] Queue ID %d initialization SUCCESSFUL (polling mode enabled)\n", queue->queue_id);
     return true;
 }
 
@@ -723,7 +723,7 @@ bool virtio_queue_add_descriptor(virtqueue_t *queue, uint16_t desc_idx, uint64_t
 
 bool virtio_queue_submit_request(virtqueue_t *queue, uint16_t desc_head)
 {
-    tiny_log(ERROR, "queue->device->base_addr : %x addr: %x\n", queue->device->base_addr, queue);
+    // tiny_log(ERROR, "queue->device->base_addr : %x addr: %x\n", queue->device->base_addr, queue);
 
     if (!queue || !queue->device)
     {
@@ -763,7 +763,7 @@ bool virtio_queue_submit_request(virtqueue_t *queue, uint16_t desc_head)
 #else
     queue->avail->flags |= VIRTQ_AVAIL_F_NO_INTERRUPT;
 #endif
-    tiny_log(INFO, "[VIRTIO] Queue %d: Set avail->flags = 0x%x for polling mode\n",
+    tiny_log(TRACE, "[VIRTIO] Queue %d: Set avail->flags = 0x%x for polling mode\n",
              queue->queue_id, queue->avail->flags);
 
     // Memory barrier - critical for ARM architecture
@@ -870,7 +870,7 @@ bool virtio_queue_wait_for_completion(virtqueue_t *queue)
 
 uint64_t virtio_scan_devices(uint32_t target_device_id)
 {
-    tiny_log(INFO, "[VIRTIO] Scanning for device ID %d across %d slots\n",
+    tiny_log(TRACE, "[VIRTIO] Scanning for device ID %d across %d slots\n",
              target_device_id, VIRTIO_MMIO_MAX_DEVICES);
 
     for (uint32_t slot = 0; slot < VIRTIO_MMIO_MAX_DEVICES; slot++)
@@ -909,7 +909,7 @@ uint64_t virtio_scan_devices(uint32_t target_device_id)
 
         if (device_id == target_device_id)
         {
-            tiny_log(INFO, "[VIRTIO] Found target device ID %d at slot %d (address 0x%x)\n",
+            tiny_log(TRACE, "[VIRTIO] Found target device ID %d at slot %d (address 0x%x)\n",
                      target_device_id, slot, (uint32_t)base_addr);
             return base_addr;
         }

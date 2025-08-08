@@ -15,7 +15,7 @@
 // Test function to verify multi-queue allocation and management
 bool virtio_test_multiqueue_allocation(void)
 {
-    tiny_log(INFO, "[VIRTIO_TEST] === Multi-Queue Allocation Test ===\n");
+    tiny_log(TRACE, "[VIRTIO_TEST] === Multi-Queue Allocation Test ===\n");
 
     // Initialize queue manager
     if (!virtio_queue_manager_init())
@@ -23,14 +23,14 @@ bool virtio_test_multiqueue_allocation(void)
         tiny_log(ERROR, "[VIRTIO_TEST] Failed to initialize queue manager\n");
         return false;
     }
-    tiny_log(INFO, "[VIRTIO_TEST] === Multi-Queue Allocation Test ===\n");
+    tiny_log(TRACE, "[VIRTIO_TEST] === Multi-Queue Allocation Test ===\n");
     // Create a mock device for testing
     virtio_device_t test_dev;
     test_dev.base_addr = 0x0a000000;
     test_dev.device_id = VIRTIO_DEVICE_ID_BLOCK;
     test_dev.version = 2;
 
-    tiny_log(INFO, "[VIRTIO_TEST] Testing queue allocation...\n");
+    tiny_log(TRACE, "[VIRTIO_TEST] Testing queue allocation...\n");
 
     // Test 1: Allocate multiple queues for the same device
     virtqueue_t *queue1 = virtio_queue_alloc(&test_dev, 0);
@@ -43,16 +43,16 @@ bool virtio_test_multiqueue_allocation(void)
         return false;
     }
 
-    tiny_log(INFO, "[VIRTIO_TEST] Allocated 3 queues successfully:\n");
-    tiny_log(INFO, "[VIRTIO_TEST]   Queue 1: ID=%d, device_queue_idx=%d\n",
+    tiny_log(TRACE, "[VIRTIO_TEST] Allocated 3 queues successfully:\n");
+    tiny_log(TRACE, "[VIRTIO_TEST]   Queue 1: ID=%d, device_queue_idx=%d\n",
              queue1->queue_id, queue1->device_queue_idx);
-    tiny_log(INFO, "[VIRTIO_TEST]   Queue 2: ID=%d, device_queue_idx=%d\n",
+    tiny_log(TRACE, "[VIRTIO_TEST]   Queue 2: ID=%d, device_queue_idx=%d\n",
              queue2->queue_id, queue2->device_queue_idx);
-    tiny_log(INFO, "[VIRTIO_TEST]   Queue 3: ID=%d, device_queue_idx=%d\n",
+    tiny_log(TRACE, "[VIRTIO_TEST]   Queue 3: ID=%d, device_queue_idx=%d\n",
              queue3->queue_id, queue3->device_queue_idx);
 
     // Test 2: Verify queue lookup functions
-    tiny_log(INFO, "[VIRTIO_TEST] Testing queue lookup functions...\n");
+    tiny_log(TRACE, "[VIRTIO_TEST] Testing queue lookup functions...\n");
 
     virtqueue_t *found_queue = virtio_queue_get_by_id(queue2->queue_id);
     if (found_queue != queue2)
@@ -68,10 +68,10 @@ bool virtio_test_multiqueue_allocation(void)
         return false;
     }
 
-    tiny_log(INFO, "[VIRTIO_TEST] Queue lookup functions work correctly\n");
+    tiny_log(TRACE, "[VIRTIO_TEST] Queue lookup functions work correctly\n");
 
     // Test 3: Test queue freeing
-    tiny_log(INFO, "[VIRTIO_TEST] Testing queue freeing...\n");
+    tiny_log(TRACE, "[VIRTIO_TEST] Testing queue freeing...\n");
 
     virtio_queue_free(queue2);
     
@@ -83,7 +83,7 @@ bool virtio_test_multiqueue_allocation(void)
         return false;
     }
 
-    tiny_log(INFO, "[VIRTIO_TEST] Queue freeing works correctly\n");
+    tiny_log(TRACE, "[VIRTIO_TEST] Queue freeing works correctly\n");
 
     // Test 4: Allocate a new queue to verify reuse of freed slot
     virtqueue_t *queue4 = virtio_queue_alloc(&test_dev, 3);
@@ -93,7 +93,7 @@ bool virtio_test_multiqueue_allocation(void)
         return false;
     }
 
-    tiny_log(INFO, "[VIRTIO_TEST] Successfully allocated new queue: ID=%d, device_queue_idx=%d\n",
+    tiny_log(TRACE, "[VIRTIO_TEST] Successfully allocated new queue: ID=%d, device_queue_idx=%d\n",
              queue4->queue_id, queue4->device_queue_idx);
 
     // Clean up remaining queues
@@ -101,14 +101,14 @@ bool virtio_test_multiqueue_allocation(void)
     virtio_queue_free(queue3);
     virtio_queue_free(queue4);
 
-    tiny_log(INFO, "[VIRTIO_TEST] === Multi-Queue Allocation Test PASSED ===\n");
+    tiny_log(TRACE, "[VIRTIO_TEST] === Multi-Queue Allocation Test PASSED ===\n");
     return true;
 }
 
 // Test function to verify memory isolation between queues
 bool virtio_test_multiqueue_memory_isolation(void)
 {
-    tiny_log(INFO, "[VIRTIO_TEST] === Multi-Queue Memory Isolation Test ===\n");
+    tiny_log(TRACE, "[VIRTIO_TEST] === Multi-Queue Memory Isolation Test ===\n");
 
     // Create mock devices
     virtio_device_t dev1, dev2;
@@ -136,10 +136,10 @@ bool virtio_test_multiqueue_memory_isolation(void)
     uint64_t base2 = 0x45000000 + (queue_dev1_1->queue_id * 0x10000);
     uint64_t base3 = 0x45000000 + (queue_dev2_0->queue_id * 0x10000);
 
-    tiny_log(INFO, "[VIRTIO_TEST] Queue memory regions:\n");
-    tiny_log(INFO, "[VIRTIO_TEST]   Queue %d (dev1): 0x%x\n", queue_dev1_0->queue_id, (uint32_t)base1);
-    tiny_log(INFO, "[VIRTIO_TEST]   Queue %d (dev1): 0x%x\n", queue_dev1_1->queue_id, (uint32_t)base2);
-    tiny_log(INFO, "[VIRTIO_TEST]   Queue %d (dev2): 0x%x\n", queue_dev2_0->queue_id, (uint32_t)base3);
+    tiny_log(TRACE, "[VIRTIO_TEST] Queue memory regions:\n");
+    tiny_log(TRACE, "[VIRTIO_TEST]   Queue %d (dev1): 0x%x\n", queue_dev1_0->queue_id, (uint32_t)base1);
+    tiny_log(TRACE, "[VIRTIO_TEST]   Queue %d (dev1): 0x%x\n", queue_dev1_1->queue_id, (uint32_t)base2);
+    tiny_log(TRACE, "[VIRTIO_TEST]   Queue %d (dev2): 0x%x\n", queue_dev2_0->queue_id, (uint32_t)base3);
 
     // Verify no memory overlap (each queue gets 64KB)
     if (base1 == base2 || base1 == base3 || base2 == base3)
@@ -154,21 +154,21 @@ bool virtio_test_multiqueue_memory_isolation(void)
         return false;
     }
 
-    tiny_log(INFO, "[VIRTIO_TEST] Memory isolation verified - no overlaps\n");
+    tiny_log(TRACE, "[VIRTIO_TEST] Memory isolation verified - no overlaps\n");
 
     // Clean up
     virtio_queue_free(queue_dev1_0);
     virtio_queue_free(queue_dev1_1);
     virtio_queue_free(queue_dev2_0);
 
-    tiny_log(INFO, "[VIRTIO_TEST] === Multi-Queue Memory Isolation Test PASSED ===\n");
+    tiny_log(TRACE, "[VIRTIO_TEST] === Multi-Queue Memory Isolation Test PASSED ===\n");
     return true;
 }
 
 // Test function to verify backward compatibility
 bool virtio_test_backward_compatibility(void)
 {
-    tiny_log(INFO, "[VIRTIO_TEST] === Backward Compatibility Test ===\n");
+    tiny_log(TRACE, "[VIRTIO_TEST] === Backward Compatibility Test ===\n");
 
     // Create a mock device
     virtio_device_t test_dev;
@@ -186,16 +186,16 @@ bool virtio_test_backward_compatibility(void)
 
     // Clean up
     virtio_queue_free(queue);
-    tiny_log(INFO, "[VIRTIO_TEST] === Backward Compatibility Test PASSED ===\n");
+    tiny_log(TRACE, "[VIRTIO_TEST] === Backward Compatibility Test PASSED ===\n");
     return true;
 }
 
 // Main test function
 bool virtio_test_multiqueue_functionality(void)
 {
-    tiny_log(INFO, "[VIRTIO_TEST] ========================================\n");
-    tiny_log(INFO, "[VIRTIO_TEST] Starting VirtIO Multi-Queue Tests\n");
-    tiny_log(INFO, "[VIRTIO_TEST] ========================================\n");
+    tiny_log(TRACE, "[VIRTIO_TEST] ========================================\n");
+    tiny_log(TRACE, "[VIRTIO_TEST] Starting VirtIO Multi-Queue Tests\n");
+    tiny_log(TRACE, "[VIRTIO_TEST] ========================================\n");
 
     bool all_passed = true;
 
@@ -218,16 +218,16 @@ bool virtio_test_multiqueue_functionality(void)
         all_passed = false;
     }
 
-    tiny_log(INFO, "[VIRTIO_TEST] ========================================\n");
+    tiny_log(TRACE, "[VIRTIO_TEST] ========================================\n");
     if (all_passed)
     {
-        tiny_log(INFO, "[VIRTIO_TEST] ALL TESTS PASSED!\n");
+        tiny_log(TRACE, "[VIRTIO_TEST] ALL TESTS PASSED!\n");
     }
     else
     {
         tiny_log(ERROR, "[VIRTIO_TEST] SOME TESTS FAILED!\n");
     }
-    tiny_log(INFO, "[VIRTIO_TEST] ========================================\n");
+    tiny_log(TRACE, "[VIRTIO_TEST] ========================================\n");
 
     return all_passed;
 }

@@ -125,3 +125,13 @@ bool timer_test_simple(void)
 
     return true;
 }
+
+uint64_t timer_get_frequency(void)
+{
+    return read_cntfrq_el0();
+}
+
+uint64_t timer_get_timestamp(void)
+{
+    return read_cntpct_el0();
+}

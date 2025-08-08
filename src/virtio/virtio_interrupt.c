@@ -32,7 +32,7 @@ virtio_interrupt_state_t virtio_irq_state = {
 
 bool virtio_interrupt_init(void)
 {
-    tiny_log(INFO, "[VIRTIO_IRQ] Initializing VirtIO interrupt system\n");
+    tiny_log(TRACE, "[VIRTIO_IRQ] Initializing VirtIO interrupt system\n");
 
     // Reset interrupt state
     virtio_reset_interrupt_state();
@@ -46,7 +46,7 @@ bool virtio_interrupt_init(void)
 
     // Verify GIC configuration
     bool gic_enabled = gic_get_enable(VIRTIO_IRQ_0);
-    tiny_log(INFO, "[VIRTIO_TEST] GIC enable status for IRQ %d: %s\n",
+    tiny_log(TRACE, "[VIRTIO_TEST] GIC enable status for IRQ %d: %s\n",
              VIRTIO_IRQ_0, gic_enabled ? "ENABLED" : "DISABLED");
 
     if (!gic_enabled)
@@ -55,12 +55,12 @@ bool virtio_interrupt_init(void)
         return false;
     }
     enable_interrupts();
-    tiny_log(INFO, "[VIRTIO_IRQ] Global interrupts enabled\n");
+    tiny_log(TRACE, "[VIRTIO_IRQ] Global interrupts enabled\n");
 
     // Mark interrupts as enabled
     virtio_irq_state.interrupts_enabled = true;
 
-    tiny_log(INFO, "[VIRTIO_IRQ] VirtIO interrupt system initialization COMPLETED\n");
+    tiny_log(TRACE, "[VIRTIO_IRQ] VirtIO interrupt system initialization COMPLETED\n");
 
     return true;
 }
@@ -68,7 +68,7 @@ bool virtio_interrupt_init(void)
 void virtio_ready_interrupts(void)
 {
     virtio_irq_state.interrupt_received = false;
-    tiny_log(INFO, "[VIRTIO_IRQ] VirtIO interrupts are ready\n");
+    tiny_log(TRACE, "[VIRTIO_IRQ] VirtIO interrupts are ready\n");
 }
 
 void virtio_irq_handler(uint64_t *ctx)
@@ -76,7 +76,7 @@ void virtio_irq_handler(uint64_t *ctx)
     // Increment interrupt counter first
     virtio_irq_state.interrupt_count++;
 
-    tiny_log(INFO, "[VIRTIO_IRQ] *** VirtIO INTERRUPT #%d RECEIVED ***\n",
+    tiny_log(TRACE, "[VIRTIO_IRQ] *** VirtIO INTERRUPT #%d RECEIVED ***\n",
              virtio_irq_state.interrupt_count);
 
     // Get VirtIO device for interrupt processing
@@ -87,22 +87,22 @@ void virtio_irq_handler(uint64_t *ctx)
         return;
     }
 
-    tiny_log(INFO, "[VIRTIO_IRQ] Processing interrupt for device at 0x%x\n", dev->base_addr);
+    tiny_log(TRACE, "[VIRTIO_IRQ] Processing interrupt for device at 0x%x\n", dev->base_addr);
 
     // Read interrupt status from VirtIO device
     uint32_t interrupt_status = virtio_read32(dev->base_addr + VIRTIO_MMIO_INTERRUPT_STATUS);
     virtio_irq_state.interrupt_status = interrupt_status;
 
-    tiny_log(INFO, "[VIRTIO_IRQ] Interrupt status register: 0x%x\n", interrupt_status);
+    tiny_log(TRACE, "[VIRTIO_IRQ] Interrupt status register: 0x%x\n", interrupt_status);
 
     // Decode interrupt status bits with detailed logging
     if (interrupt_status & VIRTIO_IRQ_VRING_UPDATE)
     {
-        tiny_log(INFO, "[VIRTIO_IRQ] VRING_UPDATE interrupt: Used buffer notification\n");
+        tiny_log(TRACE, "[VIRTIO_IRQ] VRING_UPDATE interrupt: Used buffer notification\n");
     }
     if (interrupt_status & VIRTIO_IRQ_CONFIG_CHANGE)
     {
-        tiny_log(INFO, "[VIRTIO_IRQ] CONFIG_CHANGE interrupt: Device configuration changed\n");
+        tiny_log(TRACE, "[VIRTIO_IRQ] CONFIG_CHANGE interrupt: Device configuration changed\n");
     }
     if (interrupt_status == 0)
     {
@@ -123,12 +123,12 @@ void virtio_irq_handler(uint64_t *ctx)
     // Set interrupt received flag (this wakes up waiting functions)
     virtio_irq_state.interrupt_received = true;
 
-    tiny_log(INFO, "[VIRTIO_IRQ] Interrupt processing COMPLETED successfully\n");
+    tiny_log(TRACE, "[VIRTIO_IRQ] Interrupt processing COMPLETED successfully\n");
 }
 
 bool virtio_wait_for_interrupt(uint32_t timeout_ms)
 {
-    tiny_log(INFO, "[VIRTIO_WAIT] Starting interrupt-based wait (timeout: %d ms)\n", timeout_ms);
+    tiny_log(TRACE, "[VIRTIO_WAIT] Starting interrupt-based wait (timeout: %d ms)\n", timeout_ms);
 
     // Calculate timeout in loop iterations (approximate)
     uint32_t timeout_loops = timeout_ms * 1000; // Approximate 1000 loops per ms
@@ -164,9 +164,9 @@ bool virtio_wait_for_interrupt(uint32_t timeout_ms)
         // Calculate milliseconds using integer arithmetic (avoid float)
         uint32_t ms_elapsed = loop_count / 1000;     // Integer division for ms
         uint32_t us_remainder = (loop_count % 1000); // Microsecond remainder
-        tiny_log(INFO, "[VIRTIO_WAIT] SUCCESS: Interrupt received after %d loops (%d.%d ms)\n",
+        tiny_log(TRACE, "[VIRTIO_WAIT] SUCCESS: Interrupt received after %d loops (%d.%d ms)\n",
                  loop_count, ms_elapsed, us_remainder);
-        tiny_log(INFO, "[VIRTIO_WAIT] Interrupt status: 0x%x, count: %d\n",
+        tiny_log(TRACE, "[VIRTIO_WAIT] Interrupt status: 0x%x, count: %d\n",
                  virtio_irq_state.interrupt_status, virtio_irq_state.interrupt_count);
         return true;
     }
@@ -208,43 +208,43 @@ void virtio_reset_interrupt_state(void)
 
 void virtio_print_interrupt_stats(void)
 {
-    tiny_log(INFO, "[VIRTIO_IRQ] === VirtIO Interrupt Statistics ===\n");
-    tiny_log(INFO, "[VIRTIO_IRQ] Target IRQ number: %d (calculated for slot 31)\n", VIRTIO_IRQ_0);
-    tiny_log(INFO, "[VIRTIO_IRQ] Interrupts enabled: %s\n",
+    tiny_log(TRACE, "[VIRTIO_IRQ] === VirtIO Interrupt Statistics ===\n");
+    tiny_log(TRACE, "[VIRTIO_IRQ] Target IRQ number: %d (calculated for slot 31)\n", VIRTIO_IRQ_0);
+    tiny_log(TRACE, "[VIRTIO_IRQ] Interrupts enabled: %s\n",
              virtio_irq_state.interrupts_enabled ? "YES" : "NO");
-    tiny_log(INFO, "[VIRTIO_IRQ] Total interrupts received: %d\n",
+    tiny_log(TRACE, "[VIRTIO_IRQ] Total interrupts received: %d\n",
              virtio_irq_state.interrupt_count);
-    tiny_log(INFO, "[VIRTIO_IRQ] Last interrupt status: 0x%x\n",
+    tiny_log(TRACE, "[VIRTIO_IRQ] Last interrupt status: 0x%x\n",
              virtio_irq_state.interrupt_status);
-    tiny_log(INFO, "[VIRTIO_IRQ] Interrupt received flag: %s\n",
+    tiny_log(TRACE, "[VIRTIO_IRQ] Interrupt received flag: %s\n",
              virtio_irq_state.interrupt_received ? "TRUE" : "FALSE");
-    tiny_log(INFO, "[VIRTIO_IRQ] Last used index: %d\n",
+    tiny_log(TRACE, "[VIRTIO_IRQ] Last used index: %d\n",
              virtio_irq_state.last_used_idx);
 
     // Check current GIC state for our specific IRQ
     uint32_t target_irq = VIRTIO_IRQ_0;
     int gic_enabled = gic_get_enable(target_irq);
-    tiny_log(INFO, "[VIRTIO_IRQ] GIC interrupt %d enabled: %s\n",
+    tiny_log(TRACE, "[VIRTIO_IRQ] GIC interrupt %d enabled: %s\n",
              target_irq, gic_enabled ? "YES" : "NO");
 
     // Check current device interrupt status
     uint32_t current_status = virtio_get_interrupt_status();
-    tiny_log(INFO, "[VIRTIO_IRQ] Current interrupt status: 0x%x\n", current_status);
+    tiny_log(TRACE, "[VIRTIO_IRQ] Current interrupt status: 0x%x\n", current_status);
 
     // Additional system diagnostics
-    tiny_log(INFO, "[VIRTIO_IRQ] === System State Diagnostics ===\n");
+    tiny_log(TRACE, "[VIRTIO_IRQ] === System State Diagnostics ===\n");
 
     // Check VirtIO device configuration
     virtio_device_t *dev = virtio_get_blk_device();
     if (dev)
     {
         uint32_t device_status = virtio_read32(dev->base_addr + VIRTIO_MMIO_STATUS);
-        tiny_log(INFO, "[VIRTIO_IRQ] VirtIO device status: 0x%x\n", device_status);
+        tiny_log(TRACE, "[VIRTIO_IRQ] VirtIO device status: 0x%x\n", device_status);
 
         // Check if device is in DRIVER_OK state
         if (device_status & VIRTIO_STATUS_DRIVER_OK)
         {
-            tiny_log(INFO, "[VIRTIO_IRQ] Device is DRIVER_OK\n");
+            tiny_log(TRACE, "[VIRTIO_IRQ] Device is DRIVER_OK\n");
         }
         else
         {
@@ -255,7 +255,7 @@ void virtio_print_interrupt_stats(void)
         virtqueue_t *queue = virtio_queue_get_device_queue(dev, 0);
         if (queue && queue->avail)
         {
-            tiny_log(INFO, "[VIRTIO_IRQ] Queue avail flags: 0x%x (0=interrupts enabled)\n",
+            tiny_log(TRACE, "[VIRTIO_IRQ] Queue avail flags: 0x%x (0=interrupts enabled)\n",
                      queue->avail->flags);
         }
     }
@@ -263,7 +263,7 @@ void virtio_print_interrupt_stats(void)
     // Check handler registration
     if (g_handler_vec[VIRTIO_IRQ_0] != 0)
     {
-        tiny_log(INFO, "[VIRTIO_IRQ] Handler registered for IRQ %d: 0x%x\n",
+        tiny_log(TRACE, "[VIRTIO_IRQ] Handler registered for IRQ %d: 0x%x\n",
                  VIRTIO_IRQ_0, (uint64_t)g_handler_vec[VIRTIO_IRQ_0]);
     }
     else
@@ -271,5 +271,5 @@ void virtio_print_interrupt_stats(void)
         tiny_log(ERROR, "[VIRTIO_IRQ] NO HANDLER registered for IRQ %d!\n", VIRTIO_IRQ_0);
     }
 
-    tiny_log(INFO, "[VIRTIO_IRQ] =====================================\n");
+    tiny_log(TRACE, "[VIRTIO_IRQ] =====================================\n");
 }

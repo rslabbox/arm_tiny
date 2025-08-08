@@ -103,7 +103,7 @@ void fat32_format_filename(const char *filename, char *fat_name)
 
 bool fat32_init(void)
 {
-    tiny_log(INFO, "[FAT32] Initializing FAT32 file system\n");
+    tiny_log(TRACE, "[FAT32] Initializing FAT32 file system\n");
 
     fat32_fs.initialized = false;
 
@@ -116,7 +116,7 @@ bool fat32_init(void)
     }
 
     fat32_fs.initialized = true;
-    tiny_log(INFO, "[FAT32] File system initialization SUCCESSFUL\n");
+    tiny_log(TRACE, "[FAT32] File system initialization SUCCESSFUL\n");
     return true;
 }
 
@@ -152,9 +152,9 @@ bool fat32_parse_boot_sector(void)
     fat32_fs.sectors_per_cluster = fat32_fs.boot_sector.sectors_per_cluster;
     fat32_fs.bytes_per_sector = read_unaligned_u16(&fat32_fs.boot_sector.bytes_per_sector);
 
-    tiny_log(INFO, "[FAT32] Boot sector parsed - FAT start: %d, Data start: %d, Root cluster: %d\n",
+    tiny_log(TRACE, "[FAT32] Boot sector parsed - FAT start: %d, Data start: %d, Root cluster: %d\n",
              fat32_fs.fat_start_sector, fat32_fs.data_start_sector, fat32_fs.root_dir_cluster);
-    tiny_log(INFO, "[FAT32] Sectors per cluster: %d, Bytes per sector: %d\n",
+    tiny_log(TRACE, "[FAT32] Sectors per cluster: %d, Bytes per sector: %d\n",
              fat32_fs.sectors_per_cluster, fat32_fs.bytes_per_sector);
 
     return true;
@@ -289,7 +289,7 @@ bool fat32_find_file_in_dir(uint32_t dir_cluster, const char *filename, fat32_di
             tiny_log(DEBUG, "[FAT32] Comparing '%s' with '%s'\n", dir_entry->name, target_name);
             if (fat32_compare_filename((char *)dir_entry->name, target_name, 11))
             {
-                tiny_log(INFO, "[FAT32] File found: '%s', size=%d, first_cluster=%d\n",
+                tiny_log(TRACE, "[FAT32] File found: '%s', size=%d, first_cluster=%d\n",
                          dir_entry->name, read_unaligned_u32(&dir_entry->file_size),
                          (read_unaligned_u16(&dir_entry->first_cluster_high) << 16) | read_unaligned_u16(&dir_entry->first_cluster_low));
 
@@ -312,7 +312,7 @@ bool fat32_find_file_in_dir(uint32_t dir_cluster, const char *filename, fat32_di
 
 bool fat32_read_file(const char *filename, char *buffer, uint32_t max_size)
 {
-    tiny_log(INFO, "[FAT32] Reading file '%s'\n", filename);
+    tiny_log(TRACE, "[FAT32] Reading file '%s'\n", filename);
 
     if (!fat32_fs.initialized)
     {
@@ -331,7 +331,7 @@ bool fat32_read_file(const char *filename, char *buffer, uint32_t max_size)
     uint32_t file_size = file_entry.file_size;
     uint32_t first_cluster = (file_entry.first_cluster_high << 16) | file_entry.first_cluster_low;
 
-    tiny_log(INFO, "[FAT32] File info - Size: %d bytes, First cluster: %d\n", file_size, first_cluster);
+    tiny_log(TRACE, "[FAT32] File info - Size: %d bytes, First cluster: %d\n", file_size, first_cluster);
 
     if (file_size > max_size)
     {
@@ -376,7 +376,7 @@ bool fat32_read_file(const char *filename, char *buffer, uint32_t max_size)
         buffer[bytes_read] = '\0';
     }
 
-    tiny_log(INFO, "[FAT32] File read SUCCESSFUL - %d bytes\n", bytes_read);
+    tiny_log(TRACE, "[FAT32] File read SUCCESSFUL - %d bytes\n", bytes_read);
     return true;
 }
 
@@ -515,7 +515,7 @@ bool fat32_create_dir_entry(uint32_t dir_cluster, const char *filename, uint32_t
                     return false;
                 }
 
-                tiny_log(INFO, "[FAT32] Directory entry created successfully\n");
+                tiny_log(TRACE, "[FAT32] Directory entry created successfully\n");
                 return true;
             }
         }
@@ -530,7 +530,7 @@ bool fat32_create_dir_entry(uint32_t dir_cluster, const char *filename, uint32_t
 
 bool fat32_write_file(const char *filename, const char *data, uint32_t size)
 {
-    tiny_log(INFO, "[FAT32] Writing file '%s' (%d bytes)\n", filename, size);
+    tiny_log(TRACE, "[FAT32] Writing file '%s' (%d bytes)\n", filename, size);
 
     if (!fat32_fs.initialized)
     {
@@ -624,6 +624,6 @@ bool fat32_write_file(const char *filename, const char *data, uint32_t size)
         return false;
     }
 
-    tiny_log(INFO, "[FAT32] File '%s' written successfully (%d bytes)\n", filename, size);
+    tiny_log(TRACE, "[FAT32] File '%s' written successfully (%d bytes)\n", filename, size);
     return true;
 }

@@ -24,4 +24,8 @@ void timer_init(void);
 void timer_irq_handler(uint64_t *ctx);
 bool timer_test_simple(void);
 
+// Performance measurement functions
+uint64_t timer_get_frequency(void);
+uint64_t timer_get_timestamp(void);
+
 #endif // __TIMER_H__

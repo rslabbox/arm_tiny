@@ -10,16 +10,16 @@ struct gic_t _gicv2;
 
 void gic_test_init(void)
 {
-    tiny_log(INFO, "[guest]     gicd enable %s\n", read32((void *)GICD_CTLR) ? "ok" : "error");
-    tiny_log(INFO, "[guest]     gicc enable %s\n", read32((void *)GICC_CTLR) ? "ok" : "error");
-    tiny_log(INFO, "[guest]     irq numbers: %d\n", _gicv2.irq_nr);
-    tiny_log(INFO, "[guest]     cpu num: %d\n", cpu_num());
+    tiny_log(TRACE, "[guest]     gicd enable %s\n", read32((void *)GICD_CTLR) ? "ok" : "error");
+    tiny_log(TRACE, "[guest]     gicc enable %s\n", read32((void *)GICC_CTLR) ? "ok" : "error");
+    tiny_log(TRACE, "[guest]     irq numbers: %d\n", _gicv2.irq_nr);
+    tiny_log(TRACE, "[guest]     cpu num: %d\n", cpu_num());
 }
 
 // gicd g0, g1  gicc enable
 void gic_init(void)
 {
-    tiny_log(INFO, "[GIC_INIT] Starting GIC initialization\n");
+    tiny_log(TRACE, "[GIC_INIT] Starting GIC initialization\n");
 
     _gicv2.irq_nr = GICD_TYPER_IRQS(read32((void *)GICD_TYPER));
     if (_gicv2.irq_nr > 1020)
@@ -27,45 +27,45 @@ void gic_init(void)
         _gicv2.irq_nr = 1020;
     }
 
-    tiny_log(INFO, "[GIC_INIT] IRQ count: %d\n", _gicv2.irq_nr);
+    tiny_log(TRACE, "[GIC_INIT] IRQ count: %d\n", _gicv2.irq_nr);
 
     // Read current GICD_CTLR before setting
     uint32_t gicd_ctlr_before = read32((void *)GICD_CTLR);
-    tiny_log(INFO, "[GIC_INIT] GICD_CTLR before: 0x%x\n", gicd_ctlr_before);
+    tiny_log(TRACE, "[GIC_INIT] GICD_CTLR before: 0x%x\n", gicd_ctlr_before);
 
     write32(GICD_CTRL_ENABLE_GROUP0 | GICD_CTRL_ENABLE_GROUP1, (void *)GICD_CTLR);
 
     // Verify GICD_CTLR was set correctly
     uint32_t gicd_ctlr_after = read32((void *)GICD_CTLR);
-    tiny_log(INFO, "[GIC_INIT] GICD_CTLR after: 0x%x (expected: 0x%x)\n",
+    tiny_log(TRACE, "[GIC_INIT] GICD_CTLR after: 0x%x (expected: 0x%x)\n",
              gicd_ctlr_after, GICD_CTRL_ENABLE_GROUP0 | GICD_CTRL_ENABLE_GROUP1);
 
     // Read current GICC_PMR before setting
     uint32_t gicc_pmr_before = read32((void *)GICC_PMR);
-    tiny_log(INFO, "[GIC_INIT] GICC_PMR before: 0x%x\n", gicc_pmr_before);
+    tiny_log(TRACE, "[GIC_INIT] GICC_PMR before: 0x%x\n", gicc_pmr_before);
 
     // 允许所有优先级的中断
     write32(0xff - 7, (void *)GICC_PMR);
 
     uint32_t gicc_pmr_after = read32((void *)GICC_PMR);
-    tiny_log(INFO, "[GIC_INIT] GICC_PMR after: 0x%x (expected: 0x%x)\n",
+    tiny_log(TRACE, "[GIC_INIT] GICC_PMR after: 0x%x (expected: 0x%x)\n",
              gicc_pmr_after, 0xff - 7);
 
     // Read current GICC_CTLR before setting
     uint32_t gicc_ctlr_before = read32((void *)GICC_CTLR);
-    tiny_log(INFO, "[GIC_INIT] GICC_CTLR before: 0x%x\n", gicc_ctlr_before);
+    tiny_log(TRACE, "[GIC_INIT] GICC_CTLR before: 0x%x\n", gicc_ctlr_before);
 
     // WARNING: The (1 << 9) bit is suspicious - let's document what we're setting
     uint32_t gicc_ctlr_value = GICC_CTRL_ENABLE | (1 << 9);
-    tiny_log(INFO, "[GIC_INIT] Setting GICC_CTLR to: 0x%x (ENABLE=0x%x + bit9=0x%x)\n",
+    tiny_log(TRACE, "[GIC_INIT] Setting GICC_CTLR to: 0x%x (ENABLE=0x%x + bit9=0x%x)\n",
              gicc_ctlr_value, GICC_CTRL_ENABLE, (1 << 9));
 
     write32(gicc_ctlr_value, (void *)GICC_CTLR);
 
     uint32_t gicc_ctlr_after = read32((void *)GICC_CTLR);
-    tiny_log(INFO, "[GIC_INIT] GICC_CTLR after: 0x%x\n", gicc_ctlr_after);
+    tiny_log(TRACE, "[GIC_INIT] GICC_CTLR after: 0x%x\n", gicc_ctlr_after);
 
-    tiny_log(INFO, "[GIC_INIT] GIC initialization completed\n");
+    tiny_log(TRACE, "[GIC_INIT] GIC initialization completed\n");
     gic_test_init();
 }
 
@@ -117,7 +117,7 @@ void gic_enable_int(int vector, int pri)
 {
     int reg = vector >> 5;                     //  vec / 32
     int mask = 1 << (vector & ((1 << 5) - 1)); //  vec % 32
-    tiny_log(INFO, "[guest] set enable: reg: %d, mask: 0x%x\n", reg, mask);
+    tiny_log(TRACE, "[guest] set enable: reg: %d, mask: 0x%x\n", reg, mask);
 
     write32(mask, (void *)(uint64_t)GICD_ISENABLER(reg));
 
@@ -145,7 +145,7 @@ void gic_disable_int(int vector, int pri)
 {
     int reg = vector >> 5;                     //  vec / 32
     int mask = 1 << (vector & ((1 << 5) - 1)); //  vec % 32
-    tiny_log(INFO, "[guest] disable: reg: %d, mask: 0x%x\n", reg, mask);
+    tiny_log(TRACE, "[guest] disable: reg: %d, mask: 0x%x\n", reg, mask);
 
     write32(mask, (void *)(uint64_t)GICD_ICENABLER(reg));
 }
@@ -158,7 +158,7 @@ int gic_get_enable(int vector)
 
     uint32_t val = read32((void *)(uint64_t)GICD_ISENABLER(reg));
 
-    tiny_log(INFO, "[guest] get enable: reg: %x, mask: %x, value: %x\n", reg, mask, val);
+    tiny_log(TRACE, "[guest] get enable: reg: %x, mask: %x, value: %x\n", reg, mask, val);
     return (val & mask) != 0;
 }
 

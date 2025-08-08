@@ -265,9 +265,9 @@ void test_extended_printf()
     uint16_t addr = 0x01;
     void *ptr = (void *)0x12345678;
 
-    tiny_log(INFO, "Testing extended printf:\n");
+    tiny_log(TRACE, "Testing extended printf:\n");
 
-    tiny_log(INFO, "Hello, World!\n");
+    tiny_log(TRACE, "Hello, World!\n");
     tiny_log(DEBUG, "Unsigned: %u\n", uval);
     tiny_log(WARN, "Hex upper: %X\n", uval);
     tiny_log(ERROR, "Hex lower: %2x\n", addr);

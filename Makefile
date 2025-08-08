@@ -3,6 +3,10 @@
 TOOL_PREFIX=aarch64-none-linux-gnu-
 # TOOL_PREFIX=aarch64-linux-musl-
 
+# Log level configuration
+# LOG levels: 0=NONE, 1=ERROR, 2=WARN, 3=INFO, 4=DEBUG, 5=TRACE
+LOG ?= 3
+
 # Compiler and tools
 CC = $(TOOL_PREFIX)gcc
 LD = $(TOOL_PREFIX)ld
@@ -29,7 +33,8 @@ TARGET = arm_tiny
 # Compiler flags
 CFLAGS = -Wall -I$(INCLUDE_DIR) -c -lc -g -O0 -fno-pie -fno-builtin-printf\
 -DPRINTF_INCLUDE_CONFIG_H \
- -mgeneral-regs-only -DVM_VERSION=\"$(if $(VM_VERSION),$(VM_VERSION),"null")\"
+ -mgeneral-regs-only -DVM_VERSION=\"$(if $(VM_VERSION),$(VM_VERSION),"null")\" \
+ -DLOG_LEVEL=$(LOG)
 LDFLAGS = -T link.lds
 
 # Build rules
@@ -73,4 +78,28 @@ mutil_uart:
 clean:
 	rm -rf $(OUTPUT_DIR)
 
-.PHONY: all clean
+# Log level targets
+log-none:
+	$(MAKE) LOG=0
+
+log-error:
+	$(MAKE) LOG=1
+
+log-warn:
+	$(MAKE) LOG=2
+
+log-info:
+	$(MAKE) LOG=3
+
+log-debug:
+	$(MAKE) LOG=4
+
+log-trace:
+	$(MAKE) LOG=5
+
+# Show current log level
+show-log:
+	@echo "Current LOG level: $(LOG)"
+	@echo "Available levels: 0=NONE, 1=ERROR, 2=WARN, 3=INFO, 4=DEBUG, 5=TRACE"
+
+.PHONY: all clean log-none log-error log-warn log-info log-debug show-log

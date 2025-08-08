@@ -5,15 +5,20 @@
 #include "printf.h"
 
 // 配置打印日志
-#define TINY_DEBUG
+// LOG_LEVEL is defined by Makefile: 0=NONE, 1=ERROR, 2=WARN, 3=INFO, 4=DEBUG
+#ifndef LOG_LEVEL
+#define LOG_LEVEL 3 // Default to INFO level
+#endif
+
 typedef enum
 {
-    NONE,
-    INFO,
-    WARN,
-    DEBUG,
-    ERROR,
-} LOG_LEVEL;
+    NONE = 0,
+    ERROR = 1,
+    WARN = 2,
+    INFO = 3,
+    DEBUG = 4,
+    TRACE = 5,
+} log_level_t;
 
 typedef union
 {
@@ -158,6 +163,9 @@ void print_char(char c);
         case ERROR:                 \
             printf_ext("\033[31m"); \
             break;                  \
+        case TRACE:                 \
+            printf_ext("\033[35m"); \
+            break;                  \
         default:                    \
             printf_ext("\033[0m");  \
             break;                  \
@@ -183,6 +191,9 @@ void print_char(char c);
         case ERROR:                                   \
             printf_ext("\033[31m");                   \
             break;                                    \
+        case TRACE:                                   \
+            printf_ext("\033[35m");                   \
+            break;                                    \
         default:                                      \
             printf_ext("\033[0m");                    \
             break;                                    \
@@ -191,14 +202,17 @@ void print_char(char c);
         printf_ext("\033[0m");                        \
     } while (0)
 
-// 显示行号和文件名
-#define tiny_log(level, format, ...)            \
-    do                                          \
-    {                                           \
-        printf("[%s:%d] ", __FILE__, __LINE__); \
-        set_color(level);                       \
-        printf(format, ##__VA_ARGS__);          \
-        reset_color();                          \
+// 显示行号和文件名，支持编译时日志等级过滤
+#define tiny_log(level, format, ...)                \
+    do                                              \
+    {                                               \
+        if ((level) <= LOG_LEVEL)                   \
+        {                                           \
+            printf("[%s:%d] ", __FILE__, __LINE__); \
+            set_color(level);                       \
+            printf(format, ##__VA_ARGS__);          \
+            reset_color();                          \
+        }                                           \
     } while (0)
 // tiny_log_base(level, __FILE__, __LINE__, format, ##__VA_ARGS__)
 

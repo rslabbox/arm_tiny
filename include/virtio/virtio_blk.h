@@ -72,4 +72,7 @@ bool virtio_blk_write_sector(uint32_t sector, const void *buffer);
 uint64_t virtio_blk_get_capacity(void);
 bool virtio_blk_test(void);
 
+// Performance testing functions
+bool virtio_blk_performance_test(void);
+
 #endif // __VIRTIO_BLK_H__

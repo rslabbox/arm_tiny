@@ -153,6 +153,15 @@ int kernel_main(void)
         tiny_log(INFO, "File content: %s\n", file_content);
     }
 
+    // Test 9: Disk Performance Test
+    tiny_log(INFO, "=== Testing Disk Performance ===\n");
+    if (!virtio_blk_performance_test())
+    {
+        tiny_log(WARN, "Disk performance test FAILED\n");
+        goto error_exit;
+    }
+    tiny_log(INFO, "Disk performance test PASSED\n");
+
     tiny_log(INFO, "All VirtIO tests completed successfully!\n");
     printf_ext("All");
 

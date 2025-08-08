@@ -32,21 +32,21 @@ void handle_sync_exception(uint64_t *stack_pointer)
 
     int ec = ((el1_esr >> 26) & 0b111111);
 
-    tiny_log(INFO, "el1 esr: %d\n", el1_esr);
-    tiny_log(INFO, "ec: %x\n", ec);
+    tiny_log(TRACE, "el1 esr: %d\n", el1_esr);
+    tiny_log(TRACE, "ec: %x\n", ec);
 
-    tiny_log(INFO, "This is handle_sync_exception: \n");
+    tiny_log(TRACE, "This is handle_sync_exception: \n");
     for (int i = 0; i < 31; i++)
     {
         uint64_t value = el1_ctx->r[i];
-        tiny_log(INFO, "General-purpose register: %d, value: %x\n", i, value);
+        tiny_log(TRACE, "General-purpose register: %d, value: %x\n", i, value);
     }
 
     uint64_t elr_el1_value = el1_ctx->elr;
     uint64_t usp_value = el1_ctx->usp;
     uint64_t spsr_value = el1_ctx->spsr;
 
-    tiny_log(INFO, "usp: %x, elr: %x, spsr: %x\n", usp_value, elr_el1_value, spsr_value);
+    tiny_log(TRACE, "usp: %x, elr: %x, spsr: %x\n", usp_value, elr_el1_value, spsr_value);
 
     while (1)
         ;
@@ -59,14 +59,14 @@ void handle_irq_exception(uint64_t *stack_pointer)
 
     trap_frame_t *el1_ctx = (trap_frame_t *)stack_pointer;
 
-    tiny_log(INFO, "[IRQ_HANDLER] *** IRQ EXCEPTION #%d TRIGGERED ***\n", irq_count);
-    tiny_log(INFO, "[IRQ_HANDLER] Stack pointer: 0x%x\n", (uint64_t)stack_pointer);
+    tiny_log(TRACE, "[IRQ_HANDLER] *** IRQ EXCEPTION #%d TRIGGERED ***\n", irq_count);
+    tiny_log(TRACE, "[IRQ_HANDLER] Stack pointer: 0x%x\n", (uint64_t)stack_pointer);
 
     // Read IAR and extract vector
     int iar = gic_read_iar();
     int vector = gic_iar_irqnr(iar);
 
-    tiny_log(INFO, "[IRQ_HANDLER] GIC IAR: 0x%x, Vector: %d\n", iar, vector);
+    tiny_log(TRACE, "[IRQ_HANDLER] GIC IAR: 0x%x, Vector: %d\n", iar, vector);
 
     // Check if handler exists
     if (g_handler_vec[vector] == 0)
@@ -75,9 +75,9 @@ void handle_irq_exception(uint64_t *stack_pointer)
     }
     else
     {
-        tiny_log(INFO, "[IRQ_HANDLER] Calling handler for IRQ %d\n", vector);
+        tiny_log(TRACE, "[IRQ_HANDLER] Calling handler for IRQ %d\n", vector);
         g_handler_vec[vector]((uint64_t *)el1_ctx);
-        tiny_log(INFO, "[IRQ_HANDLER] Handler for IRQ %d completed\n", vector);
+        tiny_log(TRACE, "[IRQ_HANDLER] Handler for IRQ %d completed\n", vector);
     }
 
     // Complete interrupt handling
@@ -85,7 +85,7 @@ void handle_irq_exception(uint64_t *stack_pointer)
     gic_write_eoir(iar);
     gic_write_dir(iar);
 
-    tiny_log(INFO, "[IRQ_HANDLER] IRQ exception handling completed\n");
+    tiny_log(TRACE, "[IRQ_HANDLER] IRQ exception handling completed\n");
 }
 void invalid_exception(uint64_t *stack_pointer, uint64_t kind, uint64_t source)
 {
